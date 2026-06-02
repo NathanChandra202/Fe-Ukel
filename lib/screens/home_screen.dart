@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'jasa_screen.dart';
 import 'sosial_screen.dart';
-import 'leaderboard_screen.dart';
+import 'riwayat_screen.dart';
 import 'profil_screen.dart';
+import '../theme/app_theme.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -16,7 +18,7 @@ class _HomeScreenState extends State<HomeScreen> {
   final List<Widget> _pages = [
     const JasaScreen(),
     const SosialScreen(),
-    const LeaderboardScreen(),
+    const RiwayatScreen(),
     const ProfilScreen(),
   ];
 
@@ -24,16 +26,65 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: _pages[_idx],
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: _idx,
-        type: BottomNavigationBarType.fixed,
-        onTap: (i) => setState(() => _idx = i),
-        items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.work), label: 'Jasa'),
-          BottomNavigationBarItem(icon: Icon(Icons.favorite), label: 'Sosial'),
-          BottomNavigationBarItem(icon: Icon(Icons.leaderboard), label: 'Peringkat'),
-          BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profil'),
-        ],
+      bottomNavigationBar: Container(
+        decoration: BoxDecoration(
+          color: AppColors.surface,
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.08),
+              blurRadius: 20,
+              offset: const Offset(0, -5),
+            ),
+          ],
+        ),
+        child: SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              children: [
+                _navItem(0, Icons.home_rounded, Icons.home_outlined, 'Home'),
+                _navItem(1, Icons.favorite_rounded, Icons.favorite_outline_rounded, 'Sosial'),
+                _navItem(2, Icons.receipt_long_rounded, Icons.receipt_long_outlined, 'Riwayat'),
+                _navItem(3, Icons.person_rounded, Icons.person_outline_rounded, 'Profil'),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _navItem(int index, IconData activeIcon, IconData inactiveIcon, String label) {
+    final bool selected = _idx == index;
+    return GestureDetector(
+      onTap: () => setState(() => _idx = index),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 8),
+        decoration: BoxDecoration(
+          color: selected ? AppColors.primarySurface : Colors.transparent,
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              selected ? activeIcon : inactiveIcon,
+              color: selected ? AppColors.primary : AppColors.textHint,
+              size: 24,
+            ),
+            const SizedBox(height: 4),
+            Text(
+              label,
+              style: GoogleFonts.inter(
+                fontSize: 11,
+                fontWeight: selected ? FontWeight.w700 : FontWeight.w400,
+                color: selected ? AppColors.primary : AppColors.textHint,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
