@@ -17,15 +17,25 @@ class ProfilScreen extends StatefulWidget {
 class _ProfilScreenState extends State<ProfilScreen> {
   Map<String, dynamic>? _dataSiswa;
   bool _sedangLoading = true;
+  bool _isAdmin = false; // flag admin
 
+  // load profil pas buka tab
   @override
-  // pas layar profil pertama kali muncul, langsung narik data
   void initState() {
     super.initState();
     _ambilData();
+    _cekAdmin();
   }
 
-  // narik data profil pas awal buka
+  // cek apakah user admin
+  Future<void> _cekAdmin() async {
+    final isAdmin = await ApiService.isAdmin();
+    if (mounted) {
+      setState(() => _isAdmin = isAdmin);
+    }
+  }
+
+  // get profil dari api
   Future<void> _ambilData() async {
     try {
       final res = await ApiService.getProfil();
@@ -40,7 +50,7 @@ class _ProfilScreenState extends State<ProfilScreen> {
     if (mounted) setState(() => _sedangLoading = false);
   }
 
-  // nampilin modal buat edit profil
+  // popup edit nama/kelas/jurusan
   Future<void> _editProfil() async {
     final ctrlNama = TextEditingController(text: _dataSiswa!['nama']);
     final ctrlKelas = TextEditingController(text: _dataSiswa!['kelas']);
@@ -129,7 +139,7 @@ class _ProfilScreenState extends State<ProfilScreen> {
     }
   }
 
-  // fungsi buat donlot excel riwayat poin pakai browser
+  // buka link export excel di browser
   Future<void> _downloadExcel() async {
     if (!mounted) return;
     AppSnackbar.info(context, 'Membuka unduhan riwayat poin...');
@@ -154,7 +164,7 @@ class _ProfilScreenState extends State<ProfilScreen> {
     }
   }
 
-  // buat fungsi logout user nih
+  // keluar akun, hapus token lokal
   void _logout() {
     showDialog(
       context: context,
@@ -190,7 +200,7 @@ class _ProfilScreenState extends State<ProfilScreen> {
     );
   }
 
-  // kalau user pengen hapus akun
+  // hapus akun permanen (hati hati)
   void _hapusAkun() {
     showDialog(
       context: context,
@@ -246,8 +256,8 @@ class _ProfilScreenState extends State<ProfilScreen> {
     );
   }
 
+  // ui profil + menu menu
   @override
-  // ngerender keseluruhan tampilan halaman profil
   Widget build(BuildContext context) {
     if (_sedangLoading) {
       return const Center(child: CircularProgressIndicator());
@@ -387,6 +397,26 @@ class _ProfilScreenState extends State<ProfilScreen> {
                     ),
                   ),
                   const SizedBox(height: 10),
+                  
+                  // Menu Admin (cuma muncul kalau admin)
+                  if (_isAdmin) ...[
+                    Container(
+                      decoration: BoxDecoration(
+                        color: AppColors.surface,
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(color: AppColors.primary.withOpacity(0.3), width: 2),
+                      ),
+                      child: _menuItem(
+                        icon: Icons.admin_panel_settings_rounded,
+                        iconColor: AppColors.primary,
+                        iconBg: AppColors.primarySurface,
+                        title: '⚡ Admin Dashboard',
+                        onTap: () => Navigator.pushNamed(context, '/admin-dashboard'),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                  ],
+                  
                   Container(
                     decoration: BoxDecoration(
                       color: AppColors.surface,
@@ -418,6 +448,15 @@ class _ProfilScreenState extends State<ProfilScreen> {
                           title: 'Riwayat Transaksi',
                           onTap: () =>
                               Navigator.pushNamed(context, '/riwayat'),
+                        ),
+                        _divider(),
+                        _menuItem(
+                          icon: Icons.shopping_bag_rounded,
+                          iconColor: AppColors.accent,
+                          iconBg: AppColors.accent.withOpacity(0.1),
+                          title: 'Riwayat Pesanan Merch',
+                          onTap: () =>
+                              Navigator.pushNamed(context, '/riwayat-merch'),
                         ),
                       ],
                     ),
@@ -505,6 +544,7 @@ class _ProfilScreenState extends State<ProfilScreen> {
     );
   }
 
+  // satu baris menu di profil
   Widget _menuItem({
     required IconData icon,
     required Color iconColor,
@@ -541,6 +581,7 @@ class _ProfilScreenState extends State<ProfilScreen> {
     );
   }
 
+  // garis pemisah tipis
   Widget _divider() {
     return const Divider(
       height: 1,

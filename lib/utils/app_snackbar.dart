@@ -2,8 +2,9 @@ import 'package:flutter/material.dart';
 import '../services/api_service.dart';
 import '../theme/app_theme.dart';
 
-/// Snackbar & teks error yang konsisten di seluruh aplikasi.
+// snackbar biar pesan sukses/error konsisten di semua halaman
 class AppSnackbar {
+  // hijau, kalo berhasil
   static void sukses(BuildContext context, String pesan) {
     if (!context.mounted) return;
     ScaffoldMessenger.of(context)
@@ -17,6 +18,7 @@ class AppSnackbar {
       );
   }
 
+  // merah, kalo gagal — otomatis rapihin pesan error
   static void error(
     BuildContext context,
     Object error, {
@@ -38,6 +40,7 @@ class AppSnackbar {
       );
   }
 
+  // abu/info biasa
   static void info(BuildContext context, String pesan) {
     if (!context.mounted) return;
     ScaffoldMessenger.of(context)

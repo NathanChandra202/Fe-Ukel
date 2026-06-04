@@ -17,14 +17,14 @@ class _RiwayatScreenState extends State<RiwayatScreen> {
   List _riwayat = [];
   bool _loading = true;
 
+  // load riwayat transaksi pas tab dibuka
   @override
-  // pas widget pertama kali jalan, langsung load data riwayatnya
   void initState() {
     super.initState();
     _loadRiwayat();
   }
 
-  // ngambil list histori transaksi jasa
+  // fetch riwayat poin masuk/keluar
   Future<void> _loadRiwayat() async {
     try {
       final res = await ApiService.getRiwayat();
@@ -39,7 +39,7 @@ class _RiwayatScreenState extends State<RiwayatScreen> {
     if (mounted) setState(() => _loading = false);
   }
 
-  // fungsi buat nyelesain jasa kalo kita penyedianya
+  // penyedia tandain jasa udah kelar
   Future<void> _selesaikan(int id) async {
     try {
       final res = await ApiService.selesaikanJasa(id);
@@ -58,8 +58,8 @@ class _RiwayatScreenState extends State<RiwayatScreen> {
     }
   }
 
+  // list transaksi jasa
   @override
-  // ini bagian yang ngerender tampilan layar riwayat
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -186,6 +186,7 @@ class _RiwayatScreenState extends State<RiwayatScreen> {
   }
 }
 
+// kartu satu baris riwayat transaksi
 class _RiwayatCard extends StatelessWidget {
   final Map transaksi;
   final bool isKeluar;
@@ -201,6 +202,7 @@ class _RiwayatCard extends StatelessWidget {
     required this.onComplete,
   });
 
+  // warna teks status
   Color _statusColor(String s) {
     switch (s.toLowerCase()) {
       case 'selesai':
@@ -212,6 +214,7 @@ class _RiwayatCard extends StatelessWidget {
     }
   }
 
+  // warna background chip status
   Color _statusBg(String s) {
     switch (s.toLowerCase()) {
       case 'selesai':
@@ -223,6 +226,7 @@ class _RiwayatCard extends StatelessWidget {
     }
   }
 
+  // label status bahasa indo
   String _statusLabel(String s) {
     switch (s.toLowerCase()) {
       case 'selesai':
@@ -234,6 +238,7 @@ class _RiwayatCard extends StatelessWidget {
     }
   }
 
+  // gambar kartu transaksi
   @override
   Widget build(BuildContext context) {
     return Container(

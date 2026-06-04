@@ -18,7 +18,7 @@ class _LoginScreenState extends State<LoginScreen> {
   bool _loading = false;
   bool _obsecurePass = true;
 
-  // fungsi buat login
+  // proses login ke api
   Future<void> _login() async {
     final email = _emailCtrl.text.trim();
     final password = _passCtrl.text;
@@ -68,7 +68,14 @@ class _LoginScreenState extends State<LoginScreen> {
       }
       await ApiService.sinkronkanProfilSetelahLogin();
 
-      if (mounted) Navigator.pushReplacementNamed(context, '/home');
+      // cek role, admin masuk ke dashboard admin, siswa masuk ke home biasa
+      if (mounted) {
+        final isAdmin = await ApiService.isAdmin();
+        Navigator.pushReplacementNamed(
+          context,
+          isAdmin ? '/admin-dashboard' : '/home',
+        );
+      }
     } catch (e) {
       if (mounted) {
         AppSnackbar.error(context, e, fallback: 'Login gagal. Coba lagi.');
@@ -78,6 +85,7 @@ class _LoginScreenState extends State<LoginScreen> {
     }
   }
 
+  // form email password
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -242,6 +250,7 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
+  // label kecil di atas textfield
   Widget _label(String text) {
     return Text(
       text,

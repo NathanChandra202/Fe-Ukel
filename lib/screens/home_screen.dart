@@ -22,6 +22,7 @@ class _HomeScreenState extends State<HomeScreen> {
     const ProfilScreen(),
   ];
 
+  // bottom nav + ganti tab
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -55,6 +56,7 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+  // satu item di bottom bar
   Widget _navItem(int index, IconData activeIcon, IconData inactiveIcon, String label) {
     final bool selected = _idx == index;
     return GestureDetector(

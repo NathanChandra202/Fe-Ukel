@@ -21,7 +21,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   bool _loading = false;
   bool _obscurePass = true;
 
-  // fungsi submit buat daftar
+  // kirim data daftar ke backend
   Future<void> _daftar() async {
     if (_namaCtrl.text.trim().isEmpty) {
       AppSnackbar.error(context, 'Nama lengkap wajib diisi.');
@@ -82,6 +82,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
     }
   }
 
+  // form buat akun baru
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -287,6 +288,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
     );
   }
 
+  // label form
   Widget _label(String text) {
     return Text(
       text,

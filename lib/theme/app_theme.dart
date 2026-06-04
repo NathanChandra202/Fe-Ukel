@@ -38,6 +38,7 @@ class AppColors {
   static const gradientEnd = Color(0xFF8B5CF6);
 }
 
+// bikin tema material app (warna, font, input, dll)
 ThemeData appTheme() {
   final textTheme = GoogleFonts.interTextTheme(
     const TextTheme(

@@ -18,14 +18,14 @@ class _DetailJasaScreenState extends State<DetailJasaScreen> {
   Map<String, dynamic>? _jasa;
   bool _loading = true;
 
+  // load detail pas halaman dibuka
   @override
-  // pas pertama dibuka, langsung narik data detail jasanya
   void initState() {
     super.initState();
     _loadDetail();
   }
 
-  // narik detail satu jasa
+  // get detail jasa by id
   Future<void> _loadDetail() async {
     try {
       final res = await ApiService.getDetailJasa(widget.jasaId);
@@ -40,7 +40,7 @@ class _DetailJasaScreenState extends State<DetailJasaScreen> {
     if (mounted) setState(() => _loading = false);
   }
 
-  // fungsi buat ngambil kerjaan
+  // user ambil/bayar jasa ini
   Future<void> _ambilTugas() async {
     try {
       final res = await ApiService.ambilJasa(widget.jasaId);
@@ -59,8 +59,8 @@ class _DetailJasaScreenState extends State<DetailJasaScreen> {
     }
   }
 
+  // ui detail + tombol ambil jasa
   @override
-  // ngerender tampilan halaman detail jasa
   Widget build(BuildContext context) {
     if (_loading) {
       return const Scaffold(

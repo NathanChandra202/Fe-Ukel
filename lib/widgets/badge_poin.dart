@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+// badge poin gede di header
 class BadgePoin extends StatelessWidget {
   final int poin;
   final bool large;
 
   const BadgePoin({super.key, required this.poin, this.large = false});
 
+  // render badge poin
   @override
   Widget build(BuildContext context) {
     final double iconSize = large ? 22.0 : 16.0;
@@ -15,6 +17,7 @@ class BadgePoin extends StatelessWidget {
     final double padV = large ? 10.0 : 5.0;
 
     return Container(
+      width: 100,
       padding: EdgeInsets.symmetric(horizontal: padH, vertical: padV),
       decoration: BoxDecoration(
         gradient: const LinearGradient(
@@ -41,7 +44,7 @@ class BadgePoin extends StatelessWidget {
             style: GoogleFonts.inter(
               fontWeight: FontWeight.w700,
               color: Colors.white,
-              fontSize: fontSize,
+              fontSize: 10,
               letterSpacing: 0.2,
             ),
           ),
@@ -51,11 +54,12 @@ class BadgePoin extends StatelessWidget {
   }
 }
 
-// Small inline poin chip used in cards
+// chip poin kecil di kartu jasa
 class PoinChip extends StatelessWidget {
   final int poin;
   const PoinChip({super.key, required this.poin});
 
+  // tampilin angka poin doang
   @override
   Widget build(BuildContext context) {
     return Container(

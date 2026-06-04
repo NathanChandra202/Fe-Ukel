@@ -15,6 +15,7 @@ class _SplashScreenState extends State<SplashScreen>
   late Animation<double> _fadeAnim;
   late Animation<double> _scaleAnim;
 
+  // animasi + cek token pas app baru dibuka
   @override
   void initState() {
     super.initState();
@@ -32,25 +33,32 @@ class _SplashScreenState extends State<SplashScreen>
     _cekLogin();
   }
 
+  // bersihin animasi biar ga memory leak
   @override
   void dispose() {
     _animCtrl.dispose();
     super.dispose();
   }
 
-  // ngecek token, kalo ada langsung ke home, kalo nggak ke login
+  // ada token? cek role dulu. ga ada? login
   Future<void> _cekLogin() async {
     await Future.delayed(const Duration(milliseconds: 2500));
     final token = await ApiService.ambilToken();
     if (mounted) {
       if (token != null) {
-        Navigator.pushReplacementNamed(context, '/home');
+        // cek role, admin masuk ke dashboard admin, siswa ke home
+        final isAdmin = await ApiService.isAdmin();
+        Navigator.pushReplacementNamed(
+          context,
+          isAdmin ? '/admin-dashboard' : '/home',
+        );
       } else {
         Navigator.pushReplacementNamed(context, '/login');
       }
     }
   }
 
+  // ui splash logo kontrib.id
   @override
   Widget build(BuildContext context) {
     return Scaffold(

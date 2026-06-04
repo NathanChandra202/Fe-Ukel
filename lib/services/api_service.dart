@@ -6,30 +6,35 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../config/api_config.dart';
 
-/// Error dengan pesan yang sudah ramah untuk ditampilkan ke user.
+// error khusus api biar pesannya ga aneh di ui
 class ApiException implements Exception {
   final String message;
   const ApiException(this.message);
 
+  // biar pas di snackbar ga kebaca "Instance of..."
   @override
   String toString() => message;
 }
 
+// semua panggilan http ke backend lewat sini
 class ApiService {
   static String get baseUrl => ApiConfig.baseUrl;
 
   static const Duration _timeout = Duration(seconds: 20);
 
+  // simpen token login di local storage hp/browser
   static Future<void> simpanToken(String token) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString('token', token);
   }
 
+  // ambil token yang udah disimpen
   static Future<String?> ambilToken() async {
     final prefs = await SharedPreferences.getInstance();
     return prefs.getString('token');
   }
 
+  // logout — hapus token & data user lokal
   static Future<void> hapusToken() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove('token');
@@ -38,10 +43,12 @@ class ApiService {
     await prefs.remove('saldo_poin');
   }
 
+  // cache nama & saldo poin biar ga fetch terus
   static Future<void> simpanDataSiswa(Map<String, dynamic> siswa) async {
     final prefs = await SharedPreferences.getInstance();
     final id = siswa['id'];
     final saldo = siswa['saldo_poin'];
+    final role = siswa['role']?.toString() ?? 'siswa'; // simpan role juga
     await prefs.setInt(
       'siswa_id',
       id is int ? id : (id as num).toInt(),
@@ -51,8 +58,17 @@ class ApiService {
       'saldo_poin',
       saldo is int ? saldo : (saldo as num?)?.toInt() ?? 7,
     );
+    await prefs.setString('role', role); // simpan role
   }
 
+  // cek apakah user adalah admin
+  static Future<bool> isAdmin() async {
+    final prefs = await SharedPreferences.getInstance();
+    final role = prefs.getString('role') ?? 'siswa';
+    return role == 'admin';
+  }
+
+  // header buat request yang butuh login
   static Future<Map<String, String>> headerDenganToken() async {
     final token = await ambilToken();
     if (token == null || token.isEmpty) {
@@ -65,7 +81,7 @@ class ApiService {
     };
   }
 
-  /// Ubah error teknis jadi kalimat yang mudah dipahami.
+  // ubah error ribet jadi bahasa manusia
   static String pesanUntukUser(Object error, {String? fallback}) {
     if (error is ApiException) return error.message;
 
@@ -91,6 +107,7 @@ class ApiService {
     return fallback ?? 'Terjadi kesalahan. Coba lagi.';
   }
 
+  // rapihin pesan dari go/backend biar ga kaku
   static String _rapihkanPesanServer(String? pesan, int statusCode) {
     if (pesan != null && pesan.trim().isNotEmpty) {
       final p = pesan.trim();
@@ -143,6 +160,7 @@ class ApiService {
     }
   }
 
+  // parse body http + cek status code
   static Map<String, dynamic> _decodeBody(http.Response response) {
     final raw = response.body.trim();
 
@@ -184,6 +202,7 @@ class ApiService {
     return map;
   }
 
+  // sama kayak decode body tapi buat upload multipart
   static Map<String, dynamic> _decodeStreamed(
     http.StreamedResponse response,
     String body,
@@ -193,6 +212,7 @@ class ApiService {
     );
   }
 
+  // ambil array dari json (support key data/jasa/aksi)
   static List<dynamic> _listFromBody(
     Map<String, dynamic> body,
     List<String> keys,
@@ -204,6 +224,7 @@ class ApiService {
     return [];
   }
 
+  // ambil object dari json
   static Map<String, dynamic>? _mapFromBody(
     Map<String, dynamic> body,
     List<String> keys,
@@ -216,6 +237,7 @@ class ApiService {
     return null;
   }
 
+  // wrapper request + timeout + tangkep error koneksi
   static Future<T> _jalankan<T>(Future<T> Function() aksi) async {
     try {
       return await aksi().timeout(_timeout);
@@ -235,6 +257,7 @@ class ApiService {
     }
   }
 
+  // daftar akun baru
   static Future<Map<String, dynamic>> register({
     required String nama,
     required String email,
@@ -261,6 +284,7 @@ class ApiService {
     });
   }
 
+  // login dapet token
   static Future<Map<String, dynamic>> login({
     required String email,
     required String password,
@@ -281,6 +305,7 @@ class ApiService {
     });
   }
 
+  // profil user yang lagi login
   static Future<Map<String, dynamic>> getProfil() async {
     return _jalankan(() async {
       final headers = await headerDenganToken();
@@ -292,6 +317,7 @@ class ApiService {
     });
   }
 
+  // riwayat transaksi jasa (poin masuk/keluar)
   static Future<Map<String, dynamic>> getRiwayat() async {
     return _jalankan(() async {
       final headers = await headerDenganToken();
@@ -307,6 +333,7 @@ class ApiService {
     });
   }
 
+  // list jasa buat dashboard home
   static Future<Map<String, dynamic>> getDaftarJasa() async {
     return _jalankan(() async {
       final headers = await headerDenganToken();
@@ -322,6 +349,7 @@ class ApiService {
     });
   }
 
+  // detail satu jasa
   static Future<Map<String, dynamic>> getDetailJasa(int id) async {
     return _jalankan(() async {
       final headers = await headerDenganToken();
@@ -341,6 +369,7 @@ class ApiService {
     });
   }
 
+  // post jasa baru
   static Future<Map<String, dynamic>> buatIklan({
     required String judul,
     required String kategori,
@@ -363,6 +392,7 @@ class ApiService {
     });
   }
 
+  // beli/ambil jasa orang (potong poin)
   static Future<Map<String, dynamic>> ambilJasa(int jasaId) async {
     return _jalankan(() async {
       final headers = await headerDenganToken();
@@ -374,6 +404,7 @@ class ApiService {
     });
   }
 
+  // tandain jasa kelar (transfer poin ke penyedia)
   static Future<Map<String, dynamic>> selesaikanJasa(int transaksiId) async {
     return _jalankan(() async {
       final headers = await headerDenganToken();
@@ -385,7 +416,7 @@ class ApiService {
     });
   }
 
-  /// Upload bukti aksi sosial — mendukung Flutter Web (Chrome) dan mobile.
+  // upload foto aksi sosial (web pake bytes, bukan file path)
   static Future<Map<String, dynamic>> uploadAksiSosial({
     required String deskripsi,
     required List<int> fotoBytes,
@@ -423,6 +454,7 @@ class ApiService {
     });
   }
 
+  // list upload sosial user
   static Future<Map<String, dynamic>> getRiwayatSosial() async {
     return _jalankan(() async {
       final headers = await headerDenganToken();
@@ -438,6 +470,7 @@ class ApiService {
     });
   }
 
+  // ranking siswa paling banyak poin
   static Future<Map<String, dynamic>> getLeaderboard() async {
     return _jalankan(() async {
       final headers = await headerDenganToken();
@@ -453,6 +486,7 @@ class ApiService {
     });
   }
 
+  // edit nama/kelas/jurusan
   static Future<Map<String, dynamic>> updateProfil({
     required String nama,
     required String kelas,
@@ -473,6 +507,7 @@ class ApiService {
     });
   }
 
+  // hapus akun permanen
   static Future<Map<String, dynamic>> hapusAkun() async {
     return _jalankan(() async {
       final headers = await headerDenganToken();
@@ -484,6 +519,7 @@ class ApiService {
     });
   }
 
+  // link download excel riwayat poin
   static Future<String> getExportExcelUrl() async {
     final token = await ambilToken();
     if (token == null || token.isEmpty) {
@@ -492,7 +528,7 @@ class ApiService {
     return '$baseUrl/siswa/export?token=$token';
   }
 
-  /// Cek apakah backend + database siap (tanpa login).
+  // cek backend hidup ga sebelum login/daftar
   static Future<bool> cekKoneksiBackend() async {
     try {
       final response = await http
@@ -509,7 +545,7 @@ class ApiService {
     }
   }
 
-  /// Muat ulang saldo poin ke penyimpanan lokal.
+  // update saldo poin di shared preferences
   static Future<void> perbaruiSaldoLokal() async {
     final profil = await getProfil();
     final siswa = profil['siswa'];
@@ -518,7 +554,7 @@ class ApiService {
     }
   }
 
-  /// Setelah login, lengkapi data siswa (termasuk saldo) dari profil.
+  // abis login sync profil lengkap (saldo dll)
   static Future<void> sinkronkanProfilSetelahLogin() async {
     try {
       final profil = await getProfil();
@@ -527,7 +563,248 @@ class ApiService {
         await simpanDataSiswa(Map<String, dynamic>.from(siswa));
       }
     } catch (_) {
-      // Profil opsional; login tetap boleh lanjut
+      // kalo gagal ya udah, login tetep jalan aja
     }
+  }
+
+  // ===== API MERCH (SISWA) =====
+
+  // list semua merch yang tersedia
+  static Future<Map<String, dynamic>> getDaftarMerch() async {
+    return _jalankan(() async {
+      final headers = await headerDenganToken();
+      final response = await http.get(
+        Uri.parse('$baseUrl/merch'),
+        headers: headers,
+      );
+      final body = _decodeBody(response);
+      return {
+        ...body,
+        'data': _listFromBody(body, ['data', 'merch']),
+      };
+    });
+  }
+
+  // detail satu merch
+  static Future<Map<String, dynamic>> getDetailMerch(int id) async {
+    return _jalankan(() async {
+      final headers = await headerDenganToken();
+      final response = await http.get(
+        Uri.parse('$baseUrl/merch/$id'),
+        headers: headers,
+      );
+      final body = _decodeBody(response);
+      final detail = _mapFromBody(body, ['data', 'merch']);
+      if (detail == null) {
+        throw const ApiException('Detail merch tidak ditemukan.');
+      }
+      return {
+        ...body,
+        'data': detail,
+      };
+    });
+  }
+
+  // beli merch (tukar poin), ga perlu alamat lagi - ambil di koperasi
+  static Future<Map<String, dynamic>> beliMerch({
+    required int merchId,
+    required int jumlah,
+    String? catatan,
+  }) async {
+    return _jalankan(() async {
+      final headers = await headerDenganToken();
+      final response = await http.post(
+        Uri.parse('$baseUrl/merch/beli'),
+        headers: headers,
+        body: jsonEncode({
+          'merch_id': merchId,
+          'jumlah': jumlah,
+          'catatan': catatan?.trim() ?? '',
+        }),
+      );
+      return _decodeBody(response);
+    });
+  }
+
+  // riwayat pesanan merch siswa
+  static Future<Map<String, dynamic>> getRiwayatMerch() async {
+    return _jalankan(() async {
+      final headers = await headerDenganToken();
+      final response = await http.get(
+        Uri.parse('$baseUrl/merch/riwayat'),
+        headers: headers,
+      );
+      final body = _decodeBody(response);
+      return {
+        ...body,
+        'data': _listFromBody(body, ['data', 'pesanan']),
+      };
+    });
+  }
+
+  // ===== API ADMIN =====
+
+  // buat merch baru (admin)
+  static Future<Map<String, dynamic>> adminBuatMerch({
+    required String nama,
+    required String deskripsi,
+    required String fotoUrl,
+    required int hargaPoin,
+    required int stok,
+  }) async {
+    return _jalankan(() async {
+      final headers = await headerDenganToken();
+      final response = await http.post(
+        Uri.parse('$baseUrl/admin/merch'),
+        headers: headers,
+        body: jsonEncode({
+          'nama': nama.trim(),
+          'deskripsi': deskripsi.trim(),
+          'foto_url': fotoUrl.trim(),
+          'harga_poin': hargaPoin,
+          'stok': stok,
+        }),
+      );
+      return _decodeBody(response);
+    });
+  }
+
+  // update merch (admin)
+  static Future<Map<String, dynamic>> adminUpdateMerch({
+    required int id,
+    required String nama,
+    required String deskripsi,
+    required String fotoUrl,
+    required int hargaPoin,
+    required int stok,
+  }) async {
+    return _jalankan(() async {
+      final headers = await headerDenganToken();
+      final response = await http.put(
+        Uri.parse('$baseUrl/admin/merch/$id'),
+        headers: headers,
+        body: jsonEncode({
+          'nama': nama.trim(),
+          'deskripsi': deskripsi.trim(),
+          'foto_url': fotoUrl.trim(),
+          'harga_poin': hargaPoin,
+          'stok': stok,
+        }),
+      );
+      return _decodeBody(response);
+    });
+  }
+
+  // hapus merch (admin)
+  static Future<Map<String, dynamic>> adminHapusMerch(int id) async {
+    return _jalankan(() async {
+      final headers = await headerDenganToken();
+      final response = await http.delete(
+        Uri.parse('$baseUrl/admin/merch/$id'),
+        headers: headers,
+      );
+      return _decodeBody(response);
+    });
+  }
+
+  // list semua pesanan merch (admin)
+  static Future<Map<String, dynamic>> adminGetPesanan() async {
+    return _jalankan(() async {
+      final headers = await headerDenganToken();
+      final response = await http.get(
+        Uri.parse('$baseUrl/admin/pesanan'),
+        headers: headers,
+      );
+      final body = _decodeBody(response);
+      return {
+        ...body,
+        'data': _listFromBody(body, ['data', 'pesanan']),
+      };
+    });
+  }
+
+  // update status pesanan (admin)
+  static Future<Map<String, dynamic>> adminUpdateStatusPesanan({
+    required int id,
+    required String status,
+  }) async {
+    return _jalankan(() async {
+      final headers = await headerDenganToken();
+      final response = await http.put(
+        Uri.parse('$baseUrl/admin/pesanan/$id'),
+        headers: headers,
+        body: jsonEncode({'status': status}),
+      );
+      return _decodeBody(response);
+    });
+  }
+
+  // konfirmasi ambil barang di koperasi via kode unik (admin)
+  static Future<Map<String, dynamic>> adminKonfirmasiAmbil({
+    required String kodeAmbil,
+  }) async {
+    return _jalankan(() async {
+      final headers = await headerDenganToken();
+      final response = await http.post(
+        Uri.parse('$baseUrl/admin/pesanan/konfirmasi'),
+        headers: headers,
+        body: jsonEncode({'kode_ambil': kodeAmbil}),
+      );
+      return _decodeBody(response);
+    });
+  }
+
+  // list semua aksi sosial (admin)
+  static Future<Map<String, dynamic>> adminGetAksiSosial() async {
+    return _jalankan(() async {
+      final headers = await headerDenganToken();
+      final response = await http.get(
+        Uri.parse('$baseUrl/admin/sosial'),
+        headers: headers,
+      );
+      final body = _decodeBody(response);
+      return {
+        ...body,
+        'data': _listFromBody(body, ['data', 'aksi']),
+      };
+    });
+  }
+
+  // approve/reject aksi sosial (admin)
+  static Future<Map<String, dynamic>> adminUpdateAksiSosial({
+    required int id,
+    required String status,
+  }) async {
+    return _jalankan(() async {
+      final headers = await headerDenganToken();
+      final response = await http.put(
+        Uri.parse('$baseUrl/admin/sosial/$id'),
+        headers: headers,
+        body: jsonEncode({
+          'status': status,
+        }),
+      );
+      return _decodeBody(response);
+    });
+  }
+
+  // statistik dashboard admin
+  static Future<Map<String, dynamic>> adminGetStats() async {
+    return _jalankan(() async {
+      final headers = await headerDenganToken();
+      final response = await http.get(
+        Uri.parse('$baseUrl/admin/stats'),
+        headers: headers,
+      );
+      final body = _decodeBody(response);
+      final stats = _mapFromBody(body, ['data', 'stats']);
+      if (stats == null) {
+        throw const ApiException('Statistik tidak ditemukan.');
+      }
+      return {
+        ...body,
+        'data': stats,
+      };
+    });
   }
 }

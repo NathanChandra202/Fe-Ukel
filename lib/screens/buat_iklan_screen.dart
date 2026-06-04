@@ -22,7 +22,7 @@ class _BuatIklanScreenState extends State<BuatIklanScreen> {
   final List<String> _kategoriOptions = ['Akademik', 'Non-Akademik'];
   String? _selectedKategori;
 
-  // submit buat bikin iklan jasa baru
+  // post iklan jasa ke api
   Future<void> _submit() async {
     if (_judulCtrl.text.trim().isEmpty) {
       AppSnackbar.error(context, 'Judul jasa wajib diisi.');
@@ -64,6 +64,7 @@ class _BuatIklanScreenState extends State<BuatIklanScreen> {
     }
   }
 
+  // form posting jasa
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -282,6 +283,7 @@ class _BuatIklanScreenState extends State<BuatIklanScreen> {
     );
   }
 
+  // label field
   Widget _label(String text) {
     return Text(
       text,

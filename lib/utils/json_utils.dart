@@ -1,7 +1,8 @@
 import '../services/api_service.dart';
 
-/// Parsing aman field JSON dari backend (int bisa datang sebagai num).
+// bantu parse angka dari json backend (kadang num bukan int)
 class JsonUtils {
+  // ubah id/json jadi int, kalo gagal lempar error jelas
   static int asInt(dynamic value, {String label = 'ID'}) {
     if (value == null) {
       throw ApiException('$label tidak valid.');

@@ -23,18 +23,21 @@ class _SosialScreenState extends State<SosialScreen> {
   String _namaFile = 'foto.jpg';
   final _deskripsiCtrl = TextEditingController();
 
+  // wajib dipanggil biar ga loading forever
   @override
   void initState() {
     super.initState();
     _loadRiwayat();
   }
 
+  // bersihin controller
   @override
   void dispose() {
     _deskripsiCtrl.dispose();
     super.dispose();
   }
 
+  // ambil list aksi sosial dari backend
   Future<void> _loadRiwayat({bool tampilkanError = true}) async {
     if (mounted) {
       setState(() {
@@ -70,6 +73,7 @@ class _SosialScreenState extends State<SosialScreen> {
     }
   }
 
+  // pilih gambar dari galeri (web juga)
   Future<void> _pilihFoto() async {
     try {
       final picked = await ImagePicker().pickImage(
@@ -96,6 +100,7 @@ class _SosialScreenState extends State<SosialScreen> {
     }
   }
 
+  // kirim foto + deskripsi ke server
   Future<void> _upload() async {
     if (_fotoBytes == null) {
       AppSnackbar.error(context, 'Pilih foto bukti aksi sosial terlebih dahulu.');
@@ -128,6 +133,7 @@ class _SosialScreenState extends State<SosialScreen> {
     }
   }
 
+  // halaman upload + riwayat sosial
   @override
   Widget build(BuildContext context) {
     return Scaffold(

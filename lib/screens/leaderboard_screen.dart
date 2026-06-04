@@ -15,13 +15,14 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
   List _peringkat = [];
   bool _loading = true;
 
+  // load ranking pas tab dibuka
   @override
   void initState() {
     super.initState();
     _loadData();
   }
 
-  // narik data top 10 poin
+  // ambil top siswa dari api
   Future<void> _loadData() async {
     try {
       final res = await ApiService.getLeaderboard();
@@ -36,6 +37,7 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
     if (mounted) setState(() => _loading = false);
   }
 
+  // warna medali juara 1 2 3
   Color _rankColor(int index) {
     switch (index) {
       case 0:
@@ -49,6 +51,7 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
     }
   }
 
+  // icon ranking per posisi
   IconData _rankIcon(int index) {
     switch (index) {
       case 0:
@@ -62,6 +65,7 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
     }
   }
 
+  // tampilan ranking
   @override
   Widget build(BuildContext context) {
     return Scaffold(

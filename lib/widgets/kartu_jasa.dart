@@ -10,6 +10,7 @@ class KartuJasa extends StatelessWidget {
 
   const KartuJasa({super.key, required this.jasa, required this.onTap});
 
+  // warna chip sesuai kategori
   Color _getCategoryColor(String? kategori) {
     switch ((kategori ?? '').toLowerCase()) {
       case 'akademik':
@@ -21,6 +22,7 @@ class KartuJasa extends StatelessWidget {
     }
   }
 
+  // gambar kartu satu jasa di list
   @override
   Widget build(BuildContext context) {
     final kategori = jasa['kategori'] as String? ?? 'Umum';

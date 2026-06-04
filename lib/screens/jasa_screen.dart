@@ -6,6 +6,7 @@ import '../theme/app_theme.dart';
 import '../utils/app_snackbar.dart';
 import '../utils/json_utils.dart';
 import '../widgets/badge_poin.dart';
+import 'buat_iklan_screen.dart';
 import 'detail_jasa_screen.dart';
 
 class JasaScreen extends StatefulWidget {
@@ -21,17 +22,19 @@ class _JasaScreenState extends State<JasaScreen> {
   String _namaSiswa = '';
   int _saldoPoin = 0;
 
+  // pertama buka tab home, load list jasa
   @override
   void initState() {
     super.initState();
     _loadData();
   }
 
-  // narik semua data jasa yang ada
+  // fetch jasa + update saldo lokal
   Future<void> _loadData() async {
     final prefs = await SharedPreferences.getInstance();
     _namaSiswa = prefs.getString('siswa_nama') ?? 'Siswa';
     _saldoPoin = prefs.getInt('saldo_poin') ?? 0;
+    
     try {
       try {
         await ApiService.perbaruiSaldoLokal();
@@ -40,26 +43,40 @@ class _JasaScreenState extends State<JasaScreen> {
       } catch (_) {}
 
       final res = await ApiService.getDaftarJasa();
+      print('🔍 DEBUG: Response dari API = ${res['data']}');
+      print('🔍 DEBUG: Jumlah jasa = ${(res['data'] as List?)?.length ?? 0}');
+      
       if (mounted) {
-        setState(() => _jasaList = List.from(res['data'] ?? []));
+        setState(() {
+          _jasaList = List.from(res['data'] ?? []);
+          _loading = false;
+        });
+        print('🔍 DEBUG: setState dipanggil! _jasaList.length = ${_jasaList.length}');
       }
     } catch (e) {
+      print('❌ DEBUG: Error load data = $e');
       if (mounted) {
+        setState(() => _loading = false);
         AppSnackbar.error(context, e, fallback: 'Gagal memuat daftar jasa.');
       }
     }
-    if (mounted) setState(() => _loading = false);
   }
 
+  // refresh pas pull-to-refresh / balik dari detail
   Future<void> _ambilJasa() async {
+    if (!mounted) return;
     setState(() => _loading = true);
+    print('🔍 DEBUG: _ambilJasa mulai fetch...');
     await _loadData();
+    print('🔍 DEBUG: _ambilJasa selesai!');
   }
 
+  // ambil kata pertama buat sapaan "Halo, Nathan!"
   String _firstWord(String name) {
     return name.split(' ').first;
   }
 
+  // halaman utama daftar jasa
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -99,7 +116,7 @@ class _JasaScreenState extends State<JasaScreen> {
                                     crossAxisAlignment: CrossAxisAlignment.start,
                                     children: [
                                       Text(
-                                        'Halo, ${_firstWord(_namaSiswa)}! 👋',
+                                        'Halo, ${_firstWord(_namaSiswa)}! ',
                                         style: GoogleFonts.inter(
                                           fontSize: 22,
                                           fontWeight: FontWeight.w800,
@@ -202,6 +219,7 @@ class _JasaScreenState extends State<JasaScreen> {
                         return _JasaCard(
                           jasa: j,
                           onTap: () async {
+                            // buka detail jasa
                             await Navigator.push(
                               context,
                               MaterialPageRoute(
@@ -211,7 +229,8 @@ class _JasaScreenState extends State<JasaScreen> {
                                     ),
                               ),
                             );
-                            _ambilJasa();
+                            // refresh list pas balik dari detail (mungkin jasa udah diambil)
+                            await _ambilJasa();
                           },
                         );
                       },
@@ -222,30 +241,71 @@ class _JasaScreenState extends State<JasaScreen> {
                 ],
               ),
             ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () async {
-          await Navigator.pushNamed(context, '/buat_iklan');
-          _ambilJasa();
-        },
-        icon: const Icon(Icons.add_rounded),
-        label: Text(
-          'Buat Iklan',
-          style: GoogleFonts.inter(fontWeight: FontWeight.w600, fontSize: 14),
-        ),
-        backgroundColor: AppColors.primary,
-        foregroundColor: Colors.white,
-        elevation: 6,
+      floatingActionButton: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // Button Toko Merch
+          FloatingActionButton.extended(
+            onPressed: () => Navigator.pushNamed(context, '/merch'),
+            heroTag: 'merch',
+            icon: const Icon(Icons.shopping_bag_rounded, size: 20),
+            label: Text(
+              'Toko Merch',
+              style: GoogleFonts.inter(fontWeight: FontWeight.w600, fontSize: 14),
+            ),
+            backgroundColor: AppColors.accent,
+            foregroundColor: Colors.white,
+            elevation: 4,
+          ),
+          const SizedBox(height: 12),
+          // Button Buat Iklan
+          FloatingActionButton.extended(
+            onPressed: () async {
+              print('🔍 DEBUG: Sebelum buka BuatIklanScreen');
+              
+              // push langsung ke widget (bukan named route)
+              final result = await Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const BuatIklanScreen(),
+                ),
+              );
+              
+              print('🔍 DEBUG: Balik dari BuatIklanScreen, result = $result');
+              
+              // kalau sukses buat jasa, refresh list
+              if (result == true && mounted) {
+                print('🔍 DEBUG: Mulai refresh list jasa...');
+                await _ambilJasa();
+                print('🔍 DEBUG: Selesai refresh list jasa');
+              } else {
+                print('🔍 DEBUG: Ga refresh karena result = $result atau mounted = $mounted');
+              }
+            },
+            heroTag: 'iklan',
+            icon: const Icon(Icons.add_rounded),
+            label: Text(
+              'Buat Iklan',
+              style: GoogleFonts.inter(fontWeight: FontWeight.w600, fontSize: 14),
+            ),
+            backgroundColor: AppColors.primary,
+            foregroundColor: Colors.white,
+            elevation: 6,
+          ),
+        ],
       ),
     );
   }
 }
 
+// kartu jasa di list (inline di file ini)
 class _JasaCard extends StatelessWidget {
   final Map jasa;
   final VoidCallback onTap;
 
   const _JasaCard({required this.jasa, required this.onTap});
 
+  // warna ikon sesuai kategori
   Color _getCategoryColor(String? kategori) {
     switch ((kategori ?? '').toLowerCase()) {
       case 'akademik':
@@ -257,6 +317,7 @@ class _JasaCard extends StatelessWidget {
     }
   }
 
+  // ui satu baris jasa
   @override
   Widget build(BuildContext context) {
     final kategori = jasa['kategori'] as String? ?? 'Umum';
